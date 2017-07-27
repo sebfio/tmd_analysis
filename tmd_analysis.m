@@ -113,6 +113,7 @@ ylabel('Displacement (m)');
 ylim([-3 3]);
 grid on;
 grid minor;
+saveas(gcf, 'generated_images/2_periods_base_excitation.jpg');
 hold off;
 
 % Plot 1 period of Steady State response
@@ -128,6 +129,7 @@ ylabel('Displacement (m)');
 ylim([-4 4]);
 grid on;
 grid minor;
+saveas(gcf, 'generated_images/1_period_steady_state.jpg');
 hold off;
 
 
@@ -137,13 +139,40 @@ plot_times.end = 1 * (2 * pi) / w_n;
 figure;
 
 % NOTE: Function handles can't be easily derivated in matlab, only symbolics
-force_damper = @(t) C * (-Y * w_n * sin(t) - Z * w_n * sin(w_n * t - psi));
+force_damper = @(t) -C * Z * w_n * sin(w_n * t - psi);
+force_spring = @(t) k * z_steady(t);
 
-hold on;
 fplot(force_damper, [plot_times.start, plot_times.end]);
-title('Force Applied Through damper of TMD');
+hold on;
+title('Force Applied Through Damper of TMD');
 xlabel('Time (s)');
 ylabel('Force (N)');
 grid on;
 grid minor;
+saveas(gcf, 'generated_images/force_from_damper.jpg');
+hold off;
+
+
+figure;
+fplot(force_spring, [plot_times.start, plot_times.end]);
+
+hold on;
+title('Force Applied Through Spring of TMD');
+xlabel('Time (s)');
+ylabel('Force (N)');
+grid on;
+grid minor;
+saveas(gcf, 'generated_images/force_from_spring.jpg');
+hold off;
+
+figure;
+fplot(@(t) force_spring(t) + force_damper(t), [plot_times.start, plot_times.end]);
+
+hold on;
+title('Total Force Applied on TMD');
+xlabel('Time (s)');
+ylabel('Force (N)');
+grid on;
+grid minor;
+saveas(gcf, 'generated_images/total_force_TMD.jpg');
 hold off;
