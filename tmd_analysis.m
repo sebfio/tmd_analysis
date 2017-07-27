@@ -35,6 +35,7 @@ disp_sol = @(x)deval(sol,x,1);
 
 fplot(disp_sol, [0, 5]);
 
+hold on;
 title('Displacement plot of 75cm Offset Starting Condition');
 xlabel('Time (s)');
 ylabel('Displacment (m)');
@@ -45,6 +46,7 @@ hold off;
 figure;
 vel_sol = @(x)deval(sol,x,2);
 fplot(vel_sol, [0, 5]);
+
 hold on;
 title('Velocity plot of 75cm Offset Starting Condition');
 xlabel('Time (s)');
@@ -59,6 +61,7 @@ force_applied = @(x)(C * L * vel_sol(x) + k * L * disp_sol(x));
 
 figure;
 fplot(force_applied, [0, 5]);
+
 hold on;
 title('Force Response to 150cm Offset Starting Condition');
 xlabel('Time (s)');
@@ -67,8 +70,9 @@ grid on;
 grid minor;
 hold off;
 
-% Total Solution
+% Total Solution - including steady state 
 z_0 = -0.75;
+Y   = 0.75;
 v_0 = 0;
 
 w_n = sqrt(k / m);
@@ -81,38 +85,65 @@ psi = pi / 2;
 Z = starting_offset / 2 / zeta / r;
 w_d = w_n * sqrt(1 - zeta^2);
 
-
-
 phi_d = atan((v_0 + (z_0 - Z * cos(psi)) * zeta * w_n - Z * w_n) / (w_d * (z_0 - Z * cos(psi))));
 
 Z_0 = (z_0 - Z * cos(psi)) / cos(phi_d);
 
-z_full = @(t)(Z_0 * exp(-zeta * w_n * t) * cos(w_d * t - phi_d) + Z * cos(w_n * t - psi));
-y_full = @(t) 0.75 * cos(13.02 * t);
-x_full = @(t)z_full(t) + y_full(t);
+% Deriving components of TMD response
+z_steady = @(t) Z * cos(w_n * t - psi);
+z_homogenous = @(t) Z_0 * exp(-zeta * w_n * t) * cos(w_d * t - phi_d);
 
+z_full = @(t)(z_homogenous(t) + z_steady(t));
+y_full = @(t) Y * cos(13.02 * t);
+
+x_steady    = @(t) y_full(t) + z_steady(t); 
+x_full      = @(t) z_full(t) + y_full(t);
+
+% Plot 2 periods of Transient response
 plot_times.start    = 0;
-plot_times.end      = 5;
+plot_times.end      = 2 * (2 * pi) / w_n;
 
 figure;
 fplot(x_full, [plot_times.start, plot_times.end]);
+
 hold on;
-title('Displacement Response to 75cm offset starting Condition');
+title('2 Periods of Displacement Response to Base Excitation');
 xlabel('Time (s)');
 ylabel('Displacement (m)');
+ylim([-3 3]);
+grid on;
+grid minor;
+hold off;
+
+% Plot 1 period of Steady State response
+plot_times.end = 1 * (2 * pi) / w_n;
+
+figure;
+fplot(x_steady, [plot_times.start, plot_times.end]);
+
+hold on;
+title('1 Period Steady State Response for TMD');
+xlabel('Time (s)');
+ylabel('Displacement (m)');
+ylim([-4 4]);
 grid on;
 grid minor;
 hold off;
 
 
-% % Find force from DAMPERS during steady state response.
-% figure;
-% force_damper = @(t)Z * C * -w_n * sin(w_n * t - psi);
-% hold on;
-% fplot(force_damper, [plot_times.start, plot_times.end]);
-% title('Displacement Response to 75cm offset starting Condition');
-% xlabel('Time (s)');
-% ylabel('Displacement (m)');
-% grid on;
-% grid minor;
-% hold off;
+% Find force from DAMPERS during steady state response.
+plot_times.end = 1 * (2 * pi) / w_n;
+
+figure;
+
+% NOTE: Function handles can't be easily derivated in matlab, only symbolics
+force_damper = @(t) C * (-Y * w_n * sin(t) - Z * w_n * sin(w_n * t - psi));
+
+hold on;
+fplot(force_damper, [plot_times.start, plot_times.end]);
+title('Force Applied Through damper of TMD');
+xlabel('Time (s)');
+ylabel('Force (N)');
+grid on;
+grid minor;
+hold off;
