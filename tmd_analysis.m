@@ -68,7 +68,7 @@ grid minor;
 hold off;
 
 % Total Solution
-z_0 = 0;
+z_0 = -0.75;
 v_0 = 0;
 
 w_n = sqrt(k / m);
@@ -81,19 +81,21 @@ psi = pi / 2;
 Z = starting_offset / 2 / zeta / r;
 w_d = w_n * sqrt(1 - zeta^2);
 
+
+
 phi_d = atan((v_0 + (z_0 - Z * cos(psi)) * zeta * w_n - Z * w_n) / (w_d * (z_0 - Z * cos(psi))));
 
 Z_0 = (z_0 - Z * cos(psi)) / cos(phi_d);
 
 z_full = @(t)(Z_0 * exp(-zeta * w_n * t) * cos(w_d * t - phi_d) + Z * cos(w_n * t - psi));
-y_full = @(t)cos(13.02 * t);
+y_full = @(t) 0.75 * cos(13.02 * t);
 x_full = @(t)z_full(t) + y_full(t);
 
 plot_times.start    = 0;
 plot_times.end      = 5;
 
 figure;
-fplot(z_full, [plot_times.start, plot_times.end]);
+fplot(x_full, [plot_times.start, plot_times.end]);
 hold on;
 title('Displacement Response to 75cm offset starting Condition');
 xlabel('Time (s)');
